@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 1. Gestion des Utilisateurs (Commerciaux / Admins)
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  role      String    @default("standard") // admin, commercial, standard
+  leads     Lead[]    // Leads assignés à ce commercial
+  tasks     Task[]    // Tâches assignées
+  campaigns Campaign[]
+  createdAt DateTime  @default(now())
+}
+
+// 2. Gestion des Entreprises
+model Company {
+  id        String    @id @default(uuid())
+  name      String
+  industry  String?
+  website   String?
+  contacts  Contact[]
+  createdAt DateTime  @default(now())
+}
+
+// 3. Gestion des Contacts
+model Contact {
+  id               String            @id @default(uuid())
+  firstName        String
+  lastName         String
+  email            String            @unique
+  phone            String?
+  company          Company?          @relation(fields: [companyId], references: [id])
+  companyId        String?
+  leads            Lead[]
+  campaignContacts CampaignContact[]
+  createdAt        DateTime          @default(now())
+}
+
+// 4. Gestion des Leads (Pipeline de vente)
+model Lead {
+  id         String   @id @default(uuid())
+  title      String
+  amount     Int      @default(0)
+  status     String   @default("Lead Capturé") // Nouveau, Qualification, Proposition, Gagné, Perdu
+  source     String?  // Site web, LinkedIn, Salon...
+  contact    Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId  String
+  assignedTo User?    @relation(fields: [userId], references: [id])
+  userId     String?
+  tasks      Task[]
+  createdAt  DateTime @default(now())
+}
+
+// 5. Gestion des Tâches
+model Task {
+  id         String   @id @default(uuid())
+  title      String
+  type       String   // appel, email, rdv
+  dueDate    DateTime
+  lead       Lead?    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId     String?
+  assignedTo User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  createdAt  DateTime @default(now())
+}
+
+// 6. Gestion des Campagnes (Intégration Brevo)
+model Campaign {
+  id          String            @id @default(uuid())
+  name        String
+  subject     String
+  status      String            @default("brouillon")
+  scheduledAt DateTime?
+  brevoId     String?           // ID retourné par l'API Brevo
+  createdBy   User              @relation(fields: [userId], references: [id])
+  userId      String
+  contacts    CampaignContact[]
+  createdAt   DateTime          @default(now())
+}
+
+// 7. Table de liaison pour les stats d'ouverture (KPIs Marketing)
+model CampaignContact {
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+  contact    Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId  String
+  status     String   @default("envoyé") // ouvert, cliqué, bounced
+  updatedAt  DateTime @updatedAt
+
+  @@id([campaignId, contactId]) // Clé primaire composée
+}

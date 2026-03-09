@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "lucide-react": "^0.575.0"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^10.3.0"
   }
 }

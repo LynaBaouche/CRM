@@ -10,9 +10,12 @@ datasource db {
 model User {
   id        String    @id @default(uuid())
   email     String    @unique
-  role      String    @default("standard") // admin, commercial, standard
-  leads     Lead[]    // Leads assignés à ce commercial
-  tasks     Task[]    // Tâches assignées
+  password  String
+  firstName String    @default("Utilisateur") 
+  lastName  String    @default("")            
+  role      String    @default("standard") 
+  leads     Lead[]    
+  tasks     Task[]    
   campaigns Campaign[]
   createdAt DateTime  @default(now())
 }

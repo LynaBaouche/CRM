@@ -1,56 +1,61 @@
+"use client";
+
 import Link from 'next/link';
-import { 
-  LayoutDashboard, Users, Building2, Target, 
-  Kanban, CheckSquare, Mail, BarChart2 
-} from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Home, Users, PieChart, Columns3, Settings, LogOut } from 'lucide-react';
 
 export default function Sidebar() {
-  const menuItems = [
-    { name: 'Tableau de bord', icon: LayoutDashboard, href: '/', active: true },
-    { name: 'Contacts', icon: Users, href: '/contacts' },
-    { name: 'Entreprises', icon: Building2, href: '/entreprises' },
-    { name: 'Leads', icon: Target, href: '/leads' },
-    { name: 'Pipeline', icon: Kanban, href: '/pipeline' },
-    { name: 'Tâches', icon: CheckSquare, href: '/taches' },
-    { name: 'Campagnes', icon: Mail, href: '/campagnes' },
-    { name: 'Analytique', icon: BarChart2, href: '/analytique' },
-  ];
+  const pathname = usePathname(); // Permet de savoir sur quelle page on est
+
+  // Petite fonction pour gérer la couleur du lien actif
+  const isActive = (path: string) => pathname === path ? "bg-emerald-50 text-emerald-600" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900";
 
   return (
-    <div className="w-64 h-screen bg-[#111827] text-white flex flex-col fixed left-0 top-0 shadow-2xl">
-      <div className="flex items-center gap-3 p-8">
-        <div className="bg-emerald-400 text-gray-900 font-bold w-10 h-10 flex items-center justify-center rounded-xl shadow-lg shadow-emerald-500/20">
-          CR
+    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between shadow-sm z-10 h-full">
+      <div>
+        {/* Logo */}
+        <div className="h-20 flex items-center px-8 border-b border-gray-100">
+          <div className="w-8 h-8 bg-emerald-500 rounded-lg mr-3 shadow-md shadow-emerald-500/20"></div>
+          <span className="font-black text-xl tracking-tight">CRM.io</span>
         </div>
-        <span className="text-xl font-bold tracking-tight">CRM Pro</span>
+
+        {/* Menu Principal */}
+        <nav className="p-4 space-y-2 mt-4">
+          <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Menu</p>
+          
+          <Link href="/" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/')}`}>
+            <Home size={20} />
+            Accueil
+          </Link>
+
+          <Link href="/dashboard" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/dashboard')}`}>
+            <PieChart size={20} />
+            Dashboard
+          </Link>
+
+          <Link href="/contacts" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/contacts')}`}>
+            <Users size={20} />
+            Contacts
+          </Link>
+
+          <Link href="/pipeline" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/pipeline')}`}>
+            <Columns3 size={20} />
+            Pipeline Ventes
+          </Link>
+        </nav>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link 
-              key={item.name} 
-              href={item.href}
-              className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                item.active 
-                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' 
-                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
-              }`}
-            >
-              <Icon size={20} className={`${item.active ? 'text-white' : 'group-hover:scale-110 transition-transform'}`} />
-              <span className="font-semibold">{item.name}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="p-4 border-t border-gray-800">
-        <button className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white transition-colors">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-sm font-medium">Système en ligne</span>
+      {/* Menu du bas */}
+      <div className="p-4 border-t border-gray-100">
+        <Link href="#" className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-xl font-medium transition-colors">
+          <Settings size={20} />
+          Paramètres
+        </Link>
+        <button className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors">
+          <LogOut size={20} />
+          Déconnexion
         </button>
       </div>
-    </div>
+    </aside>
   );
 }

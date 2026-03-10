@@ -1,137 +1,109 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { DollarSign, Target, TrendingUp, Briefcase, Search, Bell, Settings, BarChart2, LogOut, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { TrendingUp, Users, Target, BarChart3, ArrowUpRight } from 'lucide-react';
 
-export default function Dashboard() {
-  const router = useRouter();
-  const [userEmail, setUserEmail] = useState('');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+export default function DashboardPage() {
+  const [userRole, setUserRole] = useState("standard");
+  const [userName, setUserName] = useState("Utilisateur");
 
-  // VÉRIFICATION ET RÉCUPÉRATION DE L'UTILISATEUR
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-    } else {
+    const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+    if (token) {
       try {
-        // On décode le token JWT pour récupérer l'email (c'est magique !)
         const payload = JSON.parse(atob(token.split('.')[1]));
-        setUserEmail(payload.email);
+        if (payload.role) setUserRole(payload.role);
+        if (payload.firstName) setUserName(payload.firstName);
       } catch (e) {
-        console.error("Erreur de lecture du token");
+        console.error("Erreur token");
       }
     }
-  }, [router]);
-
-  // FONCTION DE DÉCONNEXION
-  const handleLogout = () => {
-    localStorage.removeItem('token'); // On jette le badge
-    router.push('/login'); // Retour à la porte d'entrée
-  };
-
-  const stats = [
-    { label: "Chiffre d'affaires", value: "148 500 €", change: "+12.5%", icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-50" },
-    { label: "Nouveaux leads", value: "24", change: "+8", icon: Target, color: "text-blue-500", bg: "bg-blue-50" },
-    { label: "Taux de conversion", value: "34%", change: "+2.1%", icon: TrendingUp, color: "text-amber-500", bg: "bg-amber-50" },
-    { label: "Deals actifs", value: "12", change: "-1", icon: Briefcase, color: "text-purple-500", bg: "bg-purple-50" },
-  ];
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
+    <div className="p-8 max-w-7xl mx-auto space-y-8 bg-[#F9FAFB] min-h-screen">
       
-      {/* HEADER MODIFIÉ AVEC PROFIL ET DÉCONNEXION */}
-      <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-10">
-        <div className="relative w-96 group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input type="text" placeholder="Rechercher un client..." className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none" />
-        </div>
-        
-        <div className="flex items-center gap-6 text-gray-400">
-          <button className="hover:text-emerald-600 transition-colors"><Bell size={20} /></button>
-          
-          {/* Menu Profil */}
-          <div className="relative">
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="flex items-center gap-3 hover:bg-gray-50 p-1.5 rounded-xl transition-all"
-            >
-              <div className="w-10 h-10 bg-emerald-100 text-emerald-700 font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                {userEmail ? userEmail.charAt(0).toUpperCase() : <User size={18}/>}
-              </div>
-              <div className="text-left hidden md:block">
-                <p className="text-sm font-bold text-gray-900 leading-tight">Connecté(e)</p>
-                <p className="text-xs font-medium text-gray-500">{userEmail}</p>
-              </div>
-            </button>
+      {/* HEADER */}
+      <div>
+        <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+          <BarChart3 className="text-purple-600" size={32} />
+          Tableau de bord
+        </h1>
+        <p className="text-gray-500 font-medium mt-2">
+          {userRole === 'admin' 
+            ? "Vue globale des performances de l'entreprise." 
+            : "Aperçu de vos performances commerciales."}
+        </p>
+      </div>
 
-            {/* Fenêtre déroulante de déconnexion */}
-            {isMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50">
-                <button 
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors"
-                >
-                  <LogOut size={16} />
-                  Se déconnecter
-                </button>
-              </div>
-            )}
-          </div>
-
-        </div>
-      </header>
-
-      {/* LE FIX EST ICI : 
-        1. On a retiré "max-w-7xl" pour que ça prenne toute la largeur (w-full).
-        2. On a mis "px-8" pour s'aligner AU PIXEL PRÈS avec la barre de recherche au-dessus.
-      */}
-      <div className="w-full px-8 py-8 space-y-8">
-        
-        {/* Titre */}
-        <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Tableau de bord</h1>
-          <p className="text-gray-500 font-medium">Bienvenue, voici le résumé de votre activité.</p>
-        </div>
-
-        {/* Grille des statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {stats.map((stat, index) => (
-            <div key={index} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 group cursor-pointer">
-              <div className="flex justify-between items-start mb-4">
-                <div className={`${stat.bg} ${stat.color} p-4 rounded-2xl group-hover:scale-110 transition-transform duration-300`}>
-                  <stat.icon size={26} />
-                </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${stat.change.startsWith('+') ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                  {stat.change}
-                </span>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">{stat.label}</p>
-                <p className="text-3xl font-black text-gray-900">{stat.value}</p>
-              </div>
+      {/* KPI CARDS (Les stats clés) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* CARTE 1 */}
+        <div className="bg-white p-6 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-gray-100 relative overflow-hidden">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Chiffre d'affaires</p>
+              <h3 className="text-4xl font-black text-gray-900">45 200 €</h3>
             </div>
-          ))}
-        </div>
-
-        {/* Section Graphiques (Placeholder design) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-gray-100 min-h-[400px]">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Revenus mensuels</h3>
-            <div className="w-full h-64 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center">
-              <BarChart2 className="text-gray-300 mr-2" />
-              <span className="text-gray-400 font-medium italic">Graphique en cours de chargement...</span>
+            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500">
+              <TrendingUp size={24} />
             </div>
           </div>
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Sources de leads</h3>
-            <div className="aspect-square bg-gray-50 rounded-full border-2 border-dashed border-gray-200 flex items-center justify-center">
-              <span className="text-gray-400 font-medium italic">Pie Chart</span>
-            </div>
+          <div className="mt-4 flex items-center gap-2 text-sm">
+            <span className="flex items-center text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-lg">
+              <ArrowUpRight size={16} /> +12.5%
+            </span>
+            <span className="text-gray-400 font-medium">vs mois dernier</span>
           </div>
         </div>
-        
+
+        {/* CARTE 2 */}
+        <div className="bg-white p-6 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-gray-100">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Nouveaux Prospects</p>
+              <h3 className="text-4xl font-black text-gray-900">28</h3>
+            </div>
+            <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600">
+              <Users size={24} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-sm">
+            <span className="flex items-center text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-lg">
+              <ArrowUpRight size={16} /> +4
+            </span>
+            <span className="text-gray-400 font-medium">cette semaine</span>
+          </div>
+        </div>
+
+        {/* CARTE 3 */}
+        <div className="bg-white p-6 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-gray-100">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Taux de conversion</p>
+              <h3 className="text-4xl font-black text-gray-900">64%</h3>
+            </div>
+            <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500">
+              <Target size={24} />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-sm">
+            <span className="flex items-center text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded-lg">
+              -2.1%
+            </span>
+            <span className="text-gray-400 font-medium">vs mois dernier</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ZONE GRAPHIQUE OU LISTE (Espace rempli pour faire pro) */}
+      <div className="bg-white p-8 rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-gray-100">
+        <h3 className="text-xl font-bold text-gray-900 mb-6">Activité récente</h3>
+        <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/50">
+          <TrendingUp className="text-gray-300 mb-4" size={48} />
+          <p className="text-gray-500 font-bold text-lg">Graphique d'évolution des ventes</p>
+          <p className="text-gray-400 text-sm mt-1">Les données analytiques s'afficheront ici après les premières ventes conclues.</p>
+        </div>
       </div>
     </div>
   );

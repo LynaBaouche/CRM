@@ -14,12 +14,22 @@ model User {
   firstName String    @default("Utilisateur") 
   lastName  String    @default("")            
   role      String    @default("standard") 
+  requestedAdmin Boolean   @default(false)
+  notifications  Notification[]
   leads     Lead[]    
   tasks     Task[]    
   campaigns Campaign[]
   createdAt DateTime  @default(now())
 }
-
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
 // 2. Gestion des Entreprises
 model Company {
   id        String    @id @default(uuid())
@@ -37,6 +47,7 @@ model Contact {
   lastName         String
   email            String            @unique
   phone            String?
+  status           String            @default("Prospect")
   company          Company?          @relation(fields: [companyId], references: [id])
   companyId        String?
   leads            Lead[]

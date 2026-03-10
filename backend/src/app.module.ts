@@ -4,9 +4,9 @@ import { AppService } from './app.service';
 import { ContactsModule } from './contacts/contacts.module';
 import { LeadsModule } from './leads/leads.module';
 import { AuthModule } from './auth/auth.module';
-
+import { CampaignsModule } from './campaigns/campaigns.module';
 @Module({
-  imports: [ContactsModule, LeadsModule, AuthModule],
+  imports: [ContactsModule, LeadsModule, AuthModule,CampaignsModule,],
   controllers: [AppController],
   providers: [AppService],
 })

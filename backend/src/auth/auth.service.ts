@@ -5,6 +5,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
+import { sendBrevoEmail } from '../utils/mail.util'; 
 
 dotenv.config();
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -16,83 +17,112 @@ export class AuthService {
 
   constructor(private jwtService: JwtService) {}
 
-  // ✉️ EMAIL DE BIENVENUE CLASSIQUE
-// ✉️ EMAIL DE BIENVENUE CLASSIQUE
-private async sendWelcomeEmail(userEmail: string, firstName: string) {
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) {
-    console.log("❌ ERREUR : La clé BREVO_API_KEY est introuvable dans le fichier .env !");
-    return;
-  }
-  try {
-    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: { 'accept': 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
-      body: JSON.stringify({
-        // ⚠️ ATTENTION : Cet email DOIT être celui avec lequel tu as créé ton compte Brevo !
-        sender: { name: 'CRM Entreprise', email: 'baouchelyna@gmail.com' }, 
-        to: [{ email: userEmail }],
-        subject: 'Bienvenue sur votre nouveau CRM ! 🎉',
-        htmlContent: `<h1>Bonjour ${firstName} !</h1><p>Votre compte a bien été créé.</p>`
-      })
-    });
-    
-    const data = await res.json();
-    if (res.ok) {
-      console.log("✅ SUCCESS: Email de bienvenue envoyé à", userEmail);
-    } else {
-      console.error("❌ ERREUR BREVO (Bienvenue) :", data);
-    }
-  } catch (error) { console.error("Erreur réseau Brevo:", error); }
-}
-
-// 🚨 EMAIL D'ALERTE POUR L'ADMINISTRATEUR
-private async sendAdminAlert(newUserEmail: string, firstName: string, lastName: string) {
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) return;
-  try {
-    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: { 'accept': 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
-      body: JSON.stringify({
-        sender: { name: 'Alerte Sécurité CRM', email: 'baouchelyna@gmail.com' },
-        to: [{ email: 'baouchelyna@gmail.com' }], 
-        subject: '⚠️ Nouvelle demande accès Administrateur',
-        htmlContent: `<h1>Demande d'accès Admin</h1>
-                      <p>L'utilisateur <strong>${firstName} ${lastName}</strong> (${newUserEmail}) demande les droits d'Administrateur.</p>`
-      })
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      console.log("✅ SUCCESS: Alerte Admin envoyée à la Boss !");
-    } else {
-      console.error("❌ ERREUR BREVO (Alerte Admin) :", data);
-    }
-  } catch (error) { console.error(error); }
-}
-
   // --- 1. INSCRIPTION (SIGNUP) MODIFIÉE ---
   async signup(email: string, pass: string, firstName: string, lastName: string, role: string) {
     const existingUser = await this.prisma.user.findUnique({ where: { email } });
     if (existingUser) throw new BadRequestException("Cet email est déjà utilisé !");
 
+    // LOGIQUE SÉCURITÉ : Force le rôle "standard" si on demande "admin"
+    let finalRole = role;
+    const isRequestingAdmin = role === 'admin';
+    if (isRequestingAdmin) {
+      finalRole = 'standard'; 
+    }
+
     const hashedPassword = await bcrypt.hash(pass, 10);
 
     const user = await this.prisma.user.create({
-      data: { email, password: hashedPassword, firstName, lastName, role },
+      data: { 
+        email, 
+        password: hashedPassword, 
+        firstName, 
+        lastName, 
+        role: finalRole,
+        requestedAdmin: isRequestingAdmin // 👈 On sauvegarde la demande !
+      },
     });
 
-    // On envoie le mail de bienvenue à l'utilisateur
-    await this.sendWelcomeEmail(user.email, user.firstName);
+    // ✉️ ENVOI VIA NOTRE UTILS : Email de bienvenue
+    const welcomeHtml = `
+      <h2 style="color: #111827; margin-bottom: 16px;">Bonjour ${user.firstName} ! 👋</h2>
+      <p>Votre compte a bien été créé sur Veloria CRM.</p>
+      <p>Vous pouvez dès à présent vous connecter et commencer à gérer vos opportunités et vos contacts.</p>
+      <p>À très vite sur votre espace !</p>
+    `;
+    await sendBrevoEmail(user.email, user.firstName, 'Bienvenue sur Veloria, votre nouveau CRM ! 🎉', welcomeHtml);
 
-    // Si c'est un Admin, on prévient Lyna !
-    if (role === 'admin') {
-      await this.sendAdminAlert(user.email, user.firstName, user.lastName);
+    // 🚨 ENVOI VIA NOTRE UTILS : Alerte Admin
+    if (isRequestingAdmin) {
+      const alertHtml = `
+        <h2 style="color: #E11D48; margin-bottom: 16px;">Demande d'accès Administrateur</h2>
+        <p>L'utilisateur <strong>${user.firstName} ${user.lastName}</strong> (${user.email}) vient de créer un compte et a demandé les droits <strong>Administrateur</strong>.</p>
+        <div style="background-color: #FFF1F2; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #E11D48;">
+          <p style="margin: 0; color: #9F1239; font-size: 14px;"><strong>Sécurité :</strong> Par mesure de précaution, ce compte a été restreint au rôle <strong>Standard</strong> par défaut.</p>
+        </div>
+        <p>Veuillez vous connecter à l'interface d'administration pour valider cette demande.</p>
+      `;
+      // On envoie à toi (l'admin principal)
+      await sendBrevoEmail('baouchelyna@gmail.com', 'Admin', '⚠️ Nouvelle demande accès Administrateur', alertHtml, 'Veloria - Sécurité');
     }
 
-    // Le badge inclut maintenant le Prénom et le Rôle !
     return { access_token: this.jwtService.sign({ sub: user.id, email: user.email, role: user.role, firstName: user.firstName }) };
+  }
+  // --- NOUVEAU : RÉCUPÉRER LES DEMANDES EN ATTENTE ---
+  async getAdminRequests() {
+    return this.prisma.user.findMany({
+      where: { requestedAdmin: true },
+      select: { id: true, firstName: true, lastName: true, email: true, createdAt: true }
+    });
+  }
+
+  // --- NOUVEAU : APPROUVER OU REFUSER LA DEMANDE ---
+  async handleAdminRequest(userId: string, approve: boolean) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new BadRequestException("Utilisateur introuvable");
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        role: approve ? 'admin' : 'standard',
+        requestedAdmin: false 
+      }
+    });
+    if (approve) {
+      // 1. Notification interne (dans le CRM)
+      await this.prisma.notification.create({
+        data: {
+          userId: user.id,
+          title: "Droits Administrateur accordés 🛡️",
+          message: "Félicitations ! Vos accès ont été validés par l'équipe. Vous avez maintenant un contrôle total sur le CRM Veloria."
+        }
+      });
+
+      // 2. Notification par Email (via Brevo)
+      const htmlEmail = `
+        <h2 style="color: #10B981; margin-bottom: 16px;">Demande approuvée ! ✅</h2>
+        <p>Bonjour ${user.firstName},</p>
+        <p>Bonne nouvelle ! Vos droits d'<strong>Administrateur</strong> ont été validés avec succès.</p>
+        <p>Vous pouvez dès maintenant profiter de vos nouveaux accès sur votre espace Veloria.</p>
+      `;
+      await sendBrevoEmail(user.email, user.firstName, "✅ Vos accès Admin sont validés !", htmlEmail, "Veloria - Accès accordé");
+    }
+
+    return updatedUser;
+  }
+  // --- NOUVEAU : RÉCUPÉRER LES NOTIFICATIONS D'UN UTILISATEUR ---
+  async getUserNotifications(userId: string) {
+    return this.prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  // --- NOUVEAU : MARQUER COMME LU ---
+  async markNotificationsAsRead(userId: string) {
+    return this.prisma.notification.updateMany({
+      where: { userId, isRead: false },
+      data: { isRead: true }
+    });
   }
 
   // --- 2. CONNEXION (LOGIN) ---
@@ -103,7 +133,6 @@ private async sendAdminAlert(newUserEmail: string, firstName: string, lastName: 
     const isMatch = await bcrypt.compare(pass, user.password);
     if (!isMatch) throw new UnauthorizedException("Email ou mot de passe incorrect");
 
-    // Le badge inclut maintenant le Prénom et le Rôle !
     return { access_token: this.jwtService.sign({ sub: user.id, email: user.email, role: user.role, firstName: user.firstName }) };
   }
 }

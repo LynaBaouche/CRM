@@ -1,28 +1,23 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+"use client";
+
 import './globals.css';
-import Sidebar from './components/Sidebar';
+import { usePathname } from 'next/navigation';
+import Sidebar from './components/Sidebar'; // Adjusted the path to match the relative location of Sidebar
 
-const inter = Inter({ subsets: ['latin'] });
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  
+  // On vérifie si on est sur la page login
+  const isLoginPage = pathname === '/login';
 
-export const metadata: Metadata = {
-  title: 'CRM Pro - Agence Web',
-  description: 'CRM pour la gestion des clients et campagnes marketing',
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
   return (
     <html lang="fr">
-      <body className={`${inter.className} bg-slate-50 flex`}>
-        {/* Le menu latéral */}
-        <Sidebar/>
+      <body className="flex h-screen bg-[#F9FAFB] text-gray-900 overflow-hidden">
+        {/* Si on n'est PAS sur le login, on affiche la Sidebar */}
+        {!isLoginPage && <Sidebar />}
         
-        {/* Le contenu principal (décalé vers la droite pour laisser la place au menu) */}
-        <main className="flex-1 ml-64 min-h-screen">
+        {/* Le contenu de la page (prend tout l'espace si pas de sidebar) */}
+        <main className="flex-1 overflow-y-auto">
           {children}
         </main>
       </body>

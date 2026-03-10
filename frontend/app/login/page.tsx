@@ -12,7 +12,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  // 👇 C'EST ICI QUE J'AI MIS LE NOUVEAU RÔLE PAR DÉFAUT
   const [role, setRole] = useState('standard'); 
   
   const [error, setError] = useState('');

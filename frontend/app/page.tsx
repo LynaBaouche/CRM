@@ -1,170 +1,155 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Calendar, CheckSquare, Plus, ChevronLeft, ChevronRight, Check, Search, Bell, Settings, User, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Calendar, ChevronLeft, ChevronRight, CheckSquare, Circle, CheckCircle2, Plus } from 'lucide-react';
 
 export default function HomePage() {
-  const router = useRouter();
-  const [userName, setUserName] = useState('...');
-  const [userRole, setUserRole] = useState('');
-  const [userEmail, setUserEmail] = useState('');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userName, setUserName] = useState("Utilisateur");
+  const [userRole, setUserRole] = useState("standard");
 
-  // VÉRIFICATION DE SÉCURITÉ ET RÉCUPÉRATION DU PROFIL
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login'); // Redirection si non connecté
-    } else {
+    const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+    if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        setUserName(payload.firstName || 'Utilisateur');
-        setUserRole(payload.role || '');
-        setUserEmail(payload.email || '');
+        if (payload.firstName) setUserName(payload.firstName);
+        if (payload.role) setUserRole(payload.role);
       } catch (e) {
-        console.error("Erreur de lecture du token");
+        console.error("Erreur token");
       }
     }
-  }, [router]);
+  }, []);
 
-  // FONCTION DE DÉCONNEXION
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    router.push('/login');
-  };
-
-  const today = new Date().toLocaleDateString('fr-FR', { 
-    weekday: 'long', 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
-  });
+  // Formatage de la date du jour (Ex: Mardi 10 Mars 2026)
+  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
+    <div className="p-8 max-w-6xl mx-auto space-y-10 bg-[#F9FAFB] min-h-screen">
       
-      {/* --- BARRE DU HAUT --- */}
-      <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-10">
-        <div className="relative w-96 group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
-          <input 
-            type="text" 
-            placeholder="Rechercher une tâche, une réunion..." 
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all outline-none"
-          />
-        </div>
+      {/* BARRE DE RECHERCHE */}
+      <div className="relative max-w-lg">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <input 
+          type="text" 
+          placeholder="Rechercher une tâche, une réunion..." 
+          className="w-full bg-white border border-gray-100 rounded-2xl pl-12 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-purple-500/20 shadow-sm"
+        />
+      </div>
+
+      {/* HEADER BIENVENUE */}
+      <div>
+        <p className="text-gray-500 font-bold text-sm capitalize mb-2">{today}</p>
+        <h1 className="text-4xl font-black text-gray-900 tracking-tight">Bonjour {userName},</h1>
+        <p className="text-gray-600 mt-2 font-medium">
+          Connecté(e) en tant que : <span className={`font-bold ${userRole === 'admin' ? 'text-emerald-500' : 'text-purple-600'}`}>{userRole}</span>
+        </p>
+      </div>
+
+      {/* GRILLES : RÉUNIONS & TÂCHES */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        <div className="flex items-center gap-4 text-gray-400">
-          <button className="p-2 hover:bg-gray-50 hover:text-emerald-600 rounded-lg transition-colors"><Bell size={20} /></button>
-          <button className="p-2 hover:bg-gray-50 hover:text-emerald-600 rounded-lg transition-colors"><Settings size={20} /></button>
-          
-          {/* MENU PROFIL ET DÉCONNEXION */}
-          <div className="relative ml-2">
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="flex items-center gap-3 hover:bg-gray-50 p-1 rounded-full transition-all"
-            >
-              <div className="w-10 h-10 bg-emerald-100 text-emerald-700 font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm hover:scale-105 transition-transform">
-                {userName !== '...' ? userName.charAt(0).toUpperCase() : <User size={18}/>}
-              </div>
-            </button>
-
-            {/* Fenêtre déroulante */}
-            {isMenuOpen && (
-              <div className="absolute right-0 mt-3 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50">
-                <div className="px-4 py-3 border-b border-gray-50 mb-2">
-                  <p className="text-sm font-bold text-gray-900 truncate">{userName}</p>
-                  <p className="text-xs font-medium text-gray-500 truncate">{userEmail}</p>
-                </div>
-                <button 
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors"
-                >
-                  <LogOut size={16} />
-                  Se déconnecter
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* --- CONTENU DE LA PAGE --- */}
-      <div className="p-10 max-w-5xl space-y-12">
-        
-        {/* --- EN-TÊTE DYNAMIQUE --- */}
-        <div>
-          <p className="text-emerald-600 font-bold text-sm uppercase tracking-wider mb-2">{today}</p>
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">Bonjour {userName},</h1>
-          <p className="text-gray-500 font-medium mt-1">
-            Connecté(e) en tant que : <span className="text-emerald-600 font-bold">{userRole}</span>
-          </p>
-          <p className="text-gray-400 text-sm mt-1">Voici un aperçu de votre journée.</p>
-        </div>
-
-        {/* --- SECTION RÉUNIONS --- */}
-        <section>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold flex items-center gap-3 text-gray-900">
-              <div className="bg-blue-50 text-blue-500 p-2.5 rounded-xl">
-                <Calendar size={20} />
-              </div>
+        {/* CARTE : RÉUNIONS */}
+        <div className="bg-white rounded-3xl p-8 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col h-full">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+              <Calendar className="text-gray-400" size={24} />
               Réunions
             </h2>
-            <div className="flex items-center gap-3 text-gray-500">
-              <button className="hover:bg-emerald-50 hover:text-emerald-600 p-2 rounded-xl transition-colors"><Plus size={20} /></button>
-              <div className="flex items-center gap-1 bg-white border border-gray-100 px-2 py-1.5 rounded-xl shadow-sm">
-                <button className="hover:bg-gray-100 p-1 rounded-lg transition-colors"><ChevronLeft size={18} /></button>
-                <span className="text-sm font-bold text-gray-700 px-2">Aujourd'hui</span>
-                <button className="hover:bg-gray-100 p-1 rounded-lg transition-colors"><ChevronRight size={18} /></button>
-              </div>
+            <div className="flex items-center gap-2 border border-gray-200 rounded-xl p-1 bg-white">
+              <button className="p-1 text-gray-400 hover:text-gray-800 transition-colors"><ChevronLeft size={18}/></button>
+              <span className="text-sm font-bold text-gray-800 px-2">Aujourd'hui</span>
+              <button className="p-1 text-gray-400 hover:text-gray-800 transition-colors"><ChevronRight size={18}/></button>
             </div>
           </div>
-          
-          <div className="bg-white p-10 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 text-center group">
-            <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-              <Calendar className="text-gray-400" size={28} />
-            </div>
-            <p className="text-gray-500 font-medium mb-6">Vous n'avez pas de réunion prévue aujourd'hui.</p>
-            <button className="bg-white border-2 border-dashed border-gray-200 text-gray-600 font-bold py-3 px-6 rounded-2xl hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all active:scale-95">
-              + Planifier une réunion
-            </button>
-          </div>
-        </section>
 
-        {/* --- SECTION TÂCHES --- */}
-        <section>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold flex items-center gap-3 text-gray-900">
-              <div className="bg-amber-50 text-amber-500 p-2.5 rounded-xl">
-                <CheckSquare size={20} />
+          <div className="space-y-6 flex-1">
+            {/* Item Réunion 1 */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500 shrink-0 mt-1 shadow-sm"></div>
+              <div>
+                <p className="font-bold text-gray-900">(14:00) Démonstration Produit - Prospect</p>
+                <p className="text-emerald-600 font-bold text-sm mt-1">Alice Dubois</p>
               </div>
-              Tâches
-              <span className="bg-gray-100 text-gray-600 text-sm py-0.5 px-2.5 rounded-full ml-1">1</span>
-            </h2>
+            </div>
+            {/* Ligne séparatrice */}
+            <hr className="border-gray-50" />
+            {/* Item Réunion 2 */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500 shrink-0 mt-1 shadow-sm"></div>
+              <div>
+                <p className="font-bold text-gray-900">(16:30) Team Sync: Feedback Soutenance</p>
+                <p className="text-emerald-600 font-bold text-sm mt-1">Emerald</p>
+              </div>
+            </div>
+          </div>
+
+          <button className="mt-8 w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold py-4 rounded-2xl transition-all shadow-md flex justify-center items-center gap-2">
+            <Plus size={20} /> Planifier une réunion
+          </button>
+        </div>
+
+        {/* CARTE : VOS TÂCHES */}
+        <div className="bg-white rounded-3xl p-8 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col h-full">
+          <div className="flex justify-between items-center mb-8">
             <div className="flex items-center gap-3">
-              <button className="hover:bg-emerald-50 hover:text-emerald-600 p-2 rounded-xl text-gray-500 transition-colors"><Plus size={20} /></button>
-              <div className="flex bg-gray-100/80 p-1.5 rounded-2xl">
-                <button className="px-5 py-2 text-sm font-bold bg-white rounded-xl shadow-sm text-gray-900 transition-all">À faire</button>
-                <button className="px-5 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-all">Terminées</button>
-              </div>
+              <div className="text-[#F59E0B]"><CheckSquare size={24} /></div>
+              <h2 className="text-xl font-bold text-gray-900">Vos Tâches</h2>
+              <span className="bg-gray-100 text-gray-500 text-xs font-black w-6 h-6 flex items-center justify-center rounded-full">3</span>
+            </div>
+            <div className="flex bg-gray-50 p-1 rounded-xl">
+              <button className="bg-white shadow-sm text-gray-900 text-sm font-bold px-4 py-2 rounded-lg">À faire</button>
+              <button className="text-gray-500 text-sm font-medium px-4 py-2 rounded-lg hover:text-gray-800">Terminées</button>
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-lg hover:shadow-gray-200/50 hover:border-emerald-100 cursor-pointer transition-all duration-300 group">
-            <div className="flex items-center gap-5">
-              {/* Bouton pour cocher la tâche avec effet smooth */}
-              <button className="w-7 h-7 rounded-full border-2 border-gray-200 flex items-center justify-center text-transparent group-hover:border-emerald-500 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-all duration-300">
-                <Check size={14} strokeWidth={3} />
-              </button>
-              <span className="text-gray-800 font-bold group-hover:text-emerald-700 transition-colors">Suivi de Lucas Hauchard</span>
+          <div className="space-y-4 flex-1">
+            {/* Tâche 1 */}
+            <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl transition-colors group">
+              <div className="flex items-center gap-4">
+                <Circle className="text-gray-200 group-hover:text-gray-400" size={24} />
+                <span className="font-bold text-gray-700">Suivi de Lucas Hauchard</span>
+              </div>
+              <span className="bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-lg">Feb 17</span>
             </div>
-            <div className="bg-rose-50 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-lg">
-              févr. 17
+            <hr className="border-gray-50" />
+            
+            {/* Tâche 2 */}
+            <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl transition-colors group">
+              <div className="flex items-center gap-4">
+                <Circle className="text-gray-200 group-hover:text-gray-400" size={24} />
+                <span className="font-bold text-gray-700">Suivi de Lucas Hauchard</span>
+              </div>
+              <span className="bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-lg">Rose</span>
+            </div>
+            <hr className="border-gray-50" />
+
+            {/* Tâche 3 (Cochée) */}
+            <div className="flex items-center justify-between p-2 bg-purple-50/50 rounded-xl border border-purple-100/50">
+              <div className="flex items-start gap-4">
+                <CheckCircle2 className="text-[#8B5CF6] mt-0.5" size={24} />
+                <div>
+                  <span className="font-bold text-gray-900 block">Envoyer Newsletter Promo Noël</span>
+                  <span className="text-gray-500 text-sm mt-1 block">Campaign task</span>
+                </div>
+              </div>
+              <span className="bg-purple-100 text-[#8B5CF6] text-xs font-bold px-3 py-1.5 rounded-lg">Campaign task</span>
+            </div>
+            <hr className="border-gray-50" />
+
+            {/* Tâche 4 */}
+            <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl transition-colors group">
+              <div className="flex items-center gap-4">
+                <Circle className="text-gray-200 group-hover:text-gray-400" size={24} />
+                <span className="font-bold text-gray-700">Relance Jean Dupuis</span>
+              </div>
+              <span className="bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1.5 rounded-lg">Next Week</span>
             </div>
           </div>
-        </section>
+
+          <button className="mt-6 w-full bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold py-4 rounded-2xl transition-all shadow-md flex justify-center items-center gap-2">
+            <Plus size={20} /> Créer une tâche
+          </button>
+        </div>
 
       </div>
     </div>

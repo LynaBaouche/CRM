@@ -2,60 +2,115 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, PieChart, Columns3, Settings, LogOut } from 'lucide-react';
+// 👇 J'ai rajouté "Home" pour ta page d'accueil !
+import { Home, LayoutDashboard, Users, Columns, Megaphone, Shield, Bell, LogOut, Settings } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function Sidebar() {
-  const pathname = usePathname(); // Permet de savoir sur quelle page on est
+  const pathname = usePathname();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Petite fonction pour gérer la couleur du lien actif
-  const isActive = (path: string) => pathname === path ? "bg-emerald-50 text-emerald-600" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900";
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') || localStorage.getItem('token'); 
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setCurrentUserId(payload.sub);
+      } catch (e) {
+        console.error("Erreur de décodage", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (!currentUserId) return;
+      try {
+        const res = await fetch(`http://localhost:3001/auth/notifications/${currentUserId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const unread = data.filter((n: any) => !n.isRead).length;
+          setUnreadCount(unread);
+        }
+      } catch (error) {
+        console.error("Erreur cloche notifs", error);
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000); 
+    return () => clearInterval(interval);
+  }, [currentUserId]);
+
+  const navItems = [
+    { name: 'Accueil', href: '/', icon: Home },
+    { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Contacts', href: '/contacts', icon: Users },
+    { name: 'Pipeline', href: '/pipeline', icon: Columns },
+    { name: 'Campagnes', href: '/campaigns', icon: Megaphone },
+    { name: 'Équipe', href: '/team', icon: Shield },
+    { name: 'Paramètres', href: '/settings', icon: Settings},
+  ];
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between shadow-sm z-10 h-full">
-      <div>
+    <div className="w-64 bg-white border-r border-gray-100 h-screen flex flex-col justify-between fixed left-0 top-0 z-50">
+      <div className="p-6">
         {/* Logo */}
-        <div className="h-20 flex items-center px-8 border-b border-gray-100">
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg mr-3 shadow-md shadow-emerald-500/20"></div>
-          <span className="font-black text-xl tracking-tight">CRM.io</span>
+        <div className="flex items-center gap-3 mb-10">
+          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white font-black text-xl">V</div>
+          <span className="text-xl font-black text-gray-900 tracking-tight">Veloria</span>
         </div>
 
-        {/* Menu Principal */}
-        <nav className="p-4 space-y-2 mt-4">
-          <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Menu</p>
-          
-          <Link href="/" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/')}`}>
-            <Home size={20} />
-            Accueil
-          </Link>
+        {/* Menu principal */}
+        <nav className="space-y-2">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Link 
+                key={item.name} 
+                href={item.href}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive ? 'bg-purple-50 text-purple-600' : 'text-gray-500 hover:text-purple-600 hover:bg-gray-50'}`}
+              >
+                <Icon size={20} />
+                {item.name}
+              </Link>
+            );
+          })}
 
-          <Link href="/dashboard" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/dashboard')}`}>
-            <PieChart size={20} />
-            Dashboard
-          </Link>
-
-          <Link href="/contacts" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/contacts')}`}>
-            <Users size={20} />
-            Contacts
-          </Link>
-
-          <Link href="/pipeline" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${isActive('/pipeline')}`}>
-            <Columns3 size={20} />
-            Pipeline Ventes
+          {/* Lien Notifications */}
+          <Link 
+            href="/notifications" 
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${pathname === '/notifications' ? 'bg-purple-50 text-purple-600' : 'text-gray-500 hover:text-purple-600 hover:bg-gray-50'}`}
+          >
+            <div className="relative">
+              <Bell size={20} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
+            Notifications
           </Link>
         </nav>
       </div>
 
-      {/* Menu du bas */}
-      <div className="p-4 border-t border-gray-100">
-        <Link href="#" className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-xl font-medium transition-colors">
-          <Settings size={20} />
-          Paramètres
-        </Link>
-        <button className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors">
+      {/* Déconnexion */}
+      <div className="p-6 border-t border-gray-100">
+        <button 
+          onClick={() => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('access_token');
+            window.location.href = '/login';
+          }}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-gray-500 hover:text-rose-600 hover:bg-rose-50 w-full transition-all"
+        >
           <LogOut size={20} />
           Déconnexion
         </button>
       </div>
-    </aside>
+    </div>
   );
 }

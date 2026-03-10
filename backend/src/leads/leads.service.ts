@@ -14,22 +14,21 @@ export class LeadsService {
 
   async findAll() {
     return this.prisma.lead.findMany({
-      include: { contact: true }, 
+      include: { contact: { include: { company: true } } },
       orderBy: { createdAt: 'desc' }
     });
   }
 
-  // CREATE : Adapté à ton nouveau schéma
-  async create(data: { title: string, amount: number | string, contactId: string }) {
-    return this.prisma.lead.create({
-      data: {
-        title: data.title,
-        amount: parseInt(data.amount as string) || 0, // Force en entier (Int)
-        status: 'Lead Capturé', // Ton statut par défaut
-        contactId: data.contactId,
-      }
-    });
-  }
+async create(data: { title: string, amount: number | string, contactId: string, status?: string }) {
+  return this.prisma.lead.create({
+    data: {
+      title: data.title,
+      amount: parseInt(data.amount as string) || 0, // Force en entier (Int)
+      status: data.status || 'Prospection', 
+      contactId: data.contactId,
+    }
+  });
+}
 
   async updateStatus(id: string, status: string) {
     return this.prisma.lead.update({

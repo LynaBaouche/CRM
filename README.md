@@ -2,12 +2,12 @@
 
 **Veloria CRM** est une application web moderne de gestion de la relation client (CRM). Développée pour répondre aux besoins d'une équipe commerciale dynamique, cette plateforme centralise la gestion des prospects, le suivi des ventes, l'envoi de campagnes marketing et l'administration de l'équipe.
 
-🔗 **Lien du projet en ligne (Frontend) :** [Insère ici ton lien Vercel, ex: https://veloria-crm.vercel.app]
+🔗 **Lien du projet en ligne  :** [https://veloria-crm.vercel.app](https://crm-veloria.vercel.app/)
 
 ---
 
 ## 🏢 Contexte de l'entreprise (Veloria)
-**Veloria** est une entreprise B2B en pleine croissance. Face à l'augmentation de son volume d'affaires, l'équipe commerciale avait besoin d'un outil sur-mesure, rapide et intuitif pour remplacer des processus manuels obsolètes. 
+**Veloria** est une entreprise B2B/B2C spécialisé dans le développement de sites webe et offre également des formations liées au développement web qui est  en pleine croissance. Face à l'augmentation de son volume d'affaires, l'équipe commerciale avait besoin d'un outil sur-mesure, rapide et intuitif pour remplacer des processus manuels obsolètes. 
 
 **L'objectif de ce CRM :**
 - **Centraliser** la base de données clients.

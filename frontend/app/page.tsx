@@ -6,35 +6,24 @@ import { Search, Calendar, ChevronLeft, ChevronRight, CheckSquare, Circle, Check
 export default function HomePage() {
   const [userName, setUserName] = useState("Utilisateur");
   const [userRole, setUserRole] = useState("standard");
-  
-  // Contacts récupérés de la base de données
   const [contacts, setContacts] = useState<any[]>([]);
 
   // Modales
   const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-
-  // Filtre des tâches
   const [taskFilter, setTaskFilter] = useState<'todo' | 'done'>('todo');
 
-  // Vraies données interactives pour la démo
-  const [tasks, setTasks] = useState([
-    { id: 1, title: 'Suivi de Lucas Hauchard', date: '2026-03-17', completed: false },
-    { id: 2, title: 'Envoyer Newsletter Promo Noël', date: '2026-03-11', completed: true },
-    { id: 3, title: 'Relance Jean Dupuis', date: '2026-03-18', completed: false },
-  ]);
-
-  const [meetings, setMeetings] = useState([
-    { id: 1, title: 'Démonstration Produit - Prospect', time: '14:00', date: 'Aujourd\'hui', contact: 'Alice Dubois' },
-    { id: 2, title: 'Team Sync: Feedback Soutenance', time: '16:30', date: 'Aujourd\'hui', contact: 'Emerald' }
-  ]);
+  // On initialise avec des tableaux vides (on va les remplir via le localStorage juste après)
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [meetings, setMeetings] = useState<any[]>([]);
 
   // Formulaires
   const [newTask, setNewTask] = useState({ title: '', date: '' });
   const [newMeeting, setNewMeeting] = useState({ title: '', date: '', time: '', contact: '' });
 
+  // 1. AU CHARGEMENT DE LA PAGE
   useEffect(() => {
-    // Récupération de l'utilisateur
+    // Info utilisateur
     const token = localStorage.getItem('access_token') || localStorage.getItem('token');
     if (token) {
       try {
@@ -46,7 +35,7 @@ export default function HomePage() {
       }
     }
 
-    // 👉 NOUVEAU : On récupère tes vrais contacts !
+    // Récupération des contacts depuis le backend
     const fetchContacts = async () => {
       try {
         const res = await fetch('http://localhost:3001/contacts');
@@ -58,9 +47,41 @@ export default function HomePage() {
         console.error("Erreur de chargement des contacts", error);
       }
     };
-
     fetchContacts();
+
+    // 👉 RÉCUPÉRATION DES TÂCHES ET RÉUNIONS DU LOCALSTORAGE
+    const savedTasks = localStorage.getItem('veloria_tasks');
+    const savedMeetings = localStorage.getItem('veloria_meetings');
+
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    } else {
+      // Données par défaut si c'est la première fois
+      setTasks([
+        { id: 1, title: 'Suivi de Lucas Hauchard', date: '2026-03-17', completed: false },
+        { id: 2, title: 'Envoyer Newsletter Promo Noël', date: '2026-03-11', completed: true },
+      ]);
+    }
+
+    if (savedMeetings) {
+      setMeetings(JSON.parse(savedMeetings));
+    } else {
+      // Données par défaut si c'est la première fois
+      setMeetings([
+        { id: 1, title: 'Démonstration Produit - Prospect', time: '14:00', date: 'Aujourd\'hui', contact: 'Alice Dubois' }
+      ]);
+    }
   }, []);
+
+  // 2. SAUVEGARDE AUTOMATIQUE À CHAQUE MODIFICATION
+  useEffect(() => {
+    if (tasks.length > 0) localStorage.setItem('veloria_tasks', JSON.stringify(tasks));
+  }, [tasks]);
+
+  useEffect(() => {
+    if (meetings.length > 0) localStorage.setItem('veloria_meetings', JSON.stringify(meetings));
+  }, [meetings]);
+
 
   const todayStr = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -227,7 +248,6 @@ export default function HomePage() {
             <form onSubmit={handleAddMeeting} className="space-y-4">
               <input required type="text" placeholder="Titre de la réunion" value={newMeeting.title} onChange={e => setNewMeeting({...newMeeting, title: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500/20" />
               
-              {/* 👉 NOUVEAU : LA VRAIE LISTE DÉROULANTE DE TES CONTACTS */}
               <select 
                 required 
                 value={newMeeting.contact} 

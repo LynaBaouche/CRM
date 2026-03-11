@@ -7,7 +7,8 @@ export default function PipelinePage() {
   const [leads, setLeads] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]); // Pour lier le lead à un client
   const [loading, setLoading] = useState(true);
-
+  const [selectedLead, setSelectedLead] = useState<any | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   // État de la modale d'ajout
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ title: '', amount: '', status: 'Prospection', contactId: '' });
@@ -136,7 +137,7 @@ export default function PipelinePage() {
                     const tagClass = isUrgent ? 'bg-rose-50 text-rose-600' : (lead.amount > 10000 ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-500');
                     const tagText = isUrgent ? 'Urgent' : (lead.amount > 10000 ? 'Moyen' : 'Faible');
                     
-                    // 👇 Mise à jour des probabilités (Gagné = 100%, Perdu = 0%)
+                    // Mise à jour des probabilités (Gagné = 100%, Perdu = 0%)
                     const prob = col.name === 'Prospection' ? 20 : col.name === 'Qualification' ? 40 : col.name === 'Proposition' ? 70 : col.name === 'Négociation' ? 90 : col.name === 'Gagné' ? 100 : 0;
                     const dateStr = new Date(lead.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 
@@ -145,6 +146,10 @@ export default function PipelinePage() {
                         key={lead.id}
                         draggable
                         onDragStart={(e) => handleDragStart(e, lead.id)}
+                        onClick={() => {
+                          setSelectedLead(lead);
+                          setIsEditModalOpen(true);
+                        }}
                         className={`bg-white p-5 rounded-2xl shadow-sm border space-y-4 hover:shadow-md transition-all cursor-grab active:cursor-grabbing hover:-translate-y-1 ${col.name === 'Gagné' ? 'border-emerald-200 bg-emerald-50/30' : col.name === 'Perdu' ? 'border-rose-200 opacity-75 grayscale' : 'border-gray-100'}`}
                       >
                         <span className={`${tagClass} text-xs font-bold px-2 py-1 rounded-md`}>{tagText}</span>
@@ -235,6 +240,67 @@ export default function PipelinePage() {
           </div>
         </div>
       )}
+      {isEditModalOpen && selectedLead && (
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative animate-in fade-in zoom-in duration-200">
+            <h2 className="text-2xl font-black mb-6 text-gray-900">Gérer l'opportunité</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Titre de l'opportunité</label>
+                <input 
+                  type="text" 
+                  value={selectedLead.title || ''} 
+                  onChange={(e) => setSelectedLead({...selectedLead, title: e.target.value})}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500/20" 
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Montant estimé (€)</label>
+                <input 
+                  type="number" 
+                  value={selectedLead.amount || 0} 
+                  onChange={(e) => setSelectedLead({...selectedLead, amount: Number(e.target.value)})}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500/20" 
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-8">
+              <button 
+                onClick={async () => {
+                  if(confirm("Êtes-vous sûr de vouloir supprimer cette opportunité ?")) {
+                    await fetch(`http://localhost:3001/leads/${selectedLead.id}`, { method: 'DELETE' });
+                    setIsEditModalOpen(false);
+                    fetchData(); // Rafraîchit l'affichage dynamiquement
+                  }
+                }}
+                className="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold py-3 rounded-xl transition-all"
+              >
+                Supprimer
+              </button>
+              
+              <button 
+                onClick={async () => {
+                  await fetch(`http://localhost:3001/leads/${selectedLead.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: selectedLead.title, amount: selectedLead.amount })
+                  });
+                  setIsEditModalOpen(false);
+                  fetchData(); // Rafraîchit l'affichage dynamiquement
+                }}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl transition-all"
+              >
+                Sauvegarder
+              </button>
+            </div>
+            
+            <button onClick={() => setIsEditModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-900"><X size={24} /></button>
+          </div>
+        </div>
+      )}
+      
     </div>
   );
 }

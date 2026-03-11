@@ -186,8 +186,8 @@ export default function CampaignsPage() {
               <div className="w-1/3 bg-gray-50 rounded-2xl p-6 overflow-y-auto border border-gray-100">
                 <h3 className="font-bold text-gray-900 mb-4">Liste d'envoi</h3>
                 <div className="space-y-3">
-                  {selectedCampaign.contacts?.map((c: any) => (
-                    <div key={c.id} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                  {selectedCampaign.contacts?.map((c: any, index: number) => (
+                    <div key={c.contact?.id || index} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                       <p className="font-bold text-gray-800 text-sm">{c.contact.firstName} {c.contact.lastName}</p>
                       <p className="text-gray-400 text-xs mt-0.5">{c.contact.email}</p>
                     </div>

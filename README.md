@@ -48,3 +48,32 @@
 ```bash
 git clone [https://github.com/LynaBaouche/CRM.git](https://github.com/LynaBaouche/CRM.git)
 cd CRM
+```
+## 2. Lancement rapide avec Docker (Recommandé)
+
+Le projet inclut une configuration Docker Compose pour lancer l'ensemble de la stack en une commande :
+
+```bash
+docker-compose up --build
+```
+Le frontend sera accessible sur **http://localhost:3000** et le backend sur **http://localhost:3001**.
+---
+
+## 3. Lancement manuel
+
+### Backend
+
+```bash
+cd backend
+npm install
+npx prisma generate
+npm run start:dev
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```

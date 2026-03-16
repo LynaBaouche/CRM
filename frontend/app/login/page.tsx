@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export default function LoginPage() {
   const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
@@ -26,7 +26,7 @@ export default function LoginPage() {
       : { email, password, firstName, lastName, role };
 
     try {
-      const res = await fetch(`http://localhost:3001/auth/${endpoint}`, {
+      const res = await fetch(`${API_URL}/auth/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bodyData)

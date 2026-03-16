@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Search, Euro, Briefcase, Trophy, PieChart, LayoutGrid, List, X, Calendar } from 'lucide-react';
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export default function PipelinePage() {
   const [leads, setLeads] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]); // Pour lier le lead à un client
@@ -17,12 +17,12 @@ export default function PipelinePage() {
   const fetchData = async () => {
     try {
       // Récupérer les leads
-      const resLeads = await fetch('http://localhost:3001/leads');
+      const resLeads = await fetch(`${API_URL}/leads`);
       const dataLeads = await resLeads.json();
       setLeads(dataLeads);
 
       // Récupérer les contacts pour la liste déroulante
-      const resContacts = await fetch('http://localhost:3001/contacts');
+      const resContacts = await fetch(`${API_URL}/contacts`);
       const dataContacts = await resContacts.json();
       setContacts(dataContacts);
 
@@ -48,7 +48,7 @@ export default function PipelinePage() {
 
     // 2. Sauvegarde dans la base de données (AVEC LA BONNE URL !)
     try {
-      await fetch(`http://localhost:3001/leads/${leadId}/status`, {
+      await fetch(`${API_URL}/leads/${leadId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
@@ -62,7 +62,7 @@ export default function PipelinePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:3001/leads', {
+      const res = await fetch(`${API_URL}/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -270,7 +270,7 @@ export default function PipelinePage() {
               <button 
                 onClick={async () => {
                   if(confirm("Êtes-vous sûr de vouloir supprimer cette opportunité ?")) {
-                    await fetch(`http://localhost:3001/leads/${selectedLead.id}`, { method: 'DELETE' });
+                    await fetch(`${API_URL}/leads/${selectedLead.id}`, { method: 'DELETE' });
                     setIsEditModalOpen(false);
                     fetchData(); // Rafraîchit l'affichage dynamiquement
                   }
@@ -282,7 +282,7 @@ export default function PipelinePage() {
               
               <button 
                 onClick={async () => {
-                  await fetch(`http://localhost:3001/leads/${selectedLead.id}`, {
+                  await fetch(`${API_URL}/leads/${selectedLead.id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title: selectedLead.title, amount: selectedLead.amount })

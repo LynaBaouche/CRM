@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { UserPlus, Mail, Trash2, X, Search, Filter, ArrowUpDown, Download, Edit2, Building2 } from 'lucide-react';
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,7 +22,7 @@ export default function ContactsPage() {
 
   const fetchContacts = async () => {
     try {
-      const res = await fetch('http://localhost:3001/contacts');
+      const res = await fetch(`${API_URL}/contacts`);
       const data = await res.json();
       setContacts(data);
     } catch (error) { console.error("Erreur", error); }
@@ -33,7 +33,7 @@ export default function ContactsPage() {
   const handleDelete = async (id: string) => {
     if (!window.confirm('Supprimer ce contact ?')) return;
     try {
-      await fetch(`http://localhost:3001/contacts/${id}`, { method: 'DELETE' });
+      await fetch(`${API_URL}/contacts/${id}`, { method: 'DELETE' });
       setContacts(contacts.filter(contact => contact.id !== id));
     } catch (error) { console.error("Erreur", error); }
   };
@@ -54,7 +54,7 @@ export default function ContactsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = editingId ? `http://localhost:3001/contacts/${editingId}` : 'http://localhost:3001/contacts';             
+      const url = editingId ? `${API_URL}/contacts/${editingId}` : `${API_URL}/contacts`;             
       const method = editingId ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
@@ -86,7 +86,7 @@ export default function ContactsPage() {
     e.preventDefault();
     setIsSending(true);
     try {
-      const res = await fetch(`http://localhost:3001/contacts/${selectedContact.id}/email`, {
+      const res = await fetch(`${API_URL}/contacts/${selectedContact.id}/email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(emailData)

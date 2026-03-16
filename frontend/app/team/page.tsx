@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { ShieldAlert, CheckCircle2, XCircle, Users, Shield } from 'lucide-react';
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export default function TeamPage() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchRequests = async () => {
     try {
-      const res = await fetch('http://localhost:3001/auth/admin-requests');
+      const res = await fetch(`${API_URL}/auth/admin-requests`);
       if (res.ok) setRequests(await res.json());
       setLoading(false);
     } catch (error) {
@@ -21,7 +21,7 @@ export default function TeamPage() {
 
   const handleRequest = async (id: string, approve: boolean) => {
     try {
-      const res = await fetch(`http://localhost:3001/auth/users/${id}/approve-admin`, {
+      const res = await fetch(`${API_URL}/auth/users/${id}/approve-admin`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ approve })

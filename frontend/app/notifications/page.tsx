@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Bell, CheckCircle2, Circle } from 'lucide-react';
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export default function NotificationsPage() {
       if (!currentUserId) return;
 
       try {
-        const res = await fetch(`http://localhost:3001/auth/notifications/${currentUserId}`);
+        const res = await fetch(`${API_URL}/auth/notifications/${currentUserId}`);
         if (res.ok) {
           setNotifications(await res.json());
         }
@@ -51,7 +51,7 @@ export default function NotificationsPage() {
     if (!currentUserId) return;
     
     try {
-      await fetch(`http://localhost:3001/auth/notifications/${currentUserId}/read`, { method: 'PATCH' });
+      await fetch(`${API_URL}/auth/notifications/${currentUserId}/read`, { method: 'PATCH' });
       setNotifications(notifications.map(n => ({ ...n, isRead: true })));
     } catch (error) {
       console.error(error);

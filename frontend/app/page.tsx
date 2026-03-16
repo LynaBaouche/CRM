@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Calendar, ChevronLeft, ChevronRight, CheckSquare, Circle, CheckCircle2, Plus, X } from 'lucide-react';
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export default function HomePage() {
   const [userName, setUserName] = useState("Utilisateur");
   const [userRole, setUserRole] = useState("standard");
@@ -38,7 +38,7 @@ export default function HomePage() {
     // Récupération des contacts depuis le backend
     const fetchContacts = async () => {
       try {
-        const res = await fetch('http://localhost:3001/contacts');
+        const res = await fetch(`${API_URL}/contacts`);
         if (res.ok) {
           const data = await res.json();
           setContacts(data);

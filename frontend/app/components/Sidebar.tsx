@@ -2,10 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-// 👇 J'ai rajouté "Home" pour ta page d'accueil !
 import { Home, LayoutDashboard, Users, Columns, Megaphone, Shield, Bell, LogOut, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export default function Sidebar() {
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -27,7 +26,7 @@ export default function Sidebar() {
     const fetchUnreadCount = async () => {
       if (!currentUserId) return;
       try {
-        const res = await fetch(`http://localhost:3001/auth/notifications/${currentUserId}`);
+        const res = await fetch(`${API_URL}/auth/notifications/${currentUserId}`);
         if (res.ok) {
           const data = await res.json();
           const unread = data.filter((n: any) => !n.isRead).length;

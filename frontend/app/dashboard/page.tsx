@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { TrendingUp, Users, Target, BarChart3, ArrowUpRight, Briefcase, Calendar } from 'lucide-react';
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export default function DashboardPage() {
   const [userRole, setUserRole] = useState("standard");
   const [userName, setUserName] = useState("Utilisateur");
@@ -32,7 +32,7 @@ export default function DashboardPage() {
     // 2. Récupérer les vraies données depuis le backend
     const fetchDashboardData = async () => {
       try {
-        const res = await fetch('http://localhost:3001/leads');
+        const res = await fetch(`${API_URL}/leads`);
         if (res.ok) {
           const leads = await res.json();
 

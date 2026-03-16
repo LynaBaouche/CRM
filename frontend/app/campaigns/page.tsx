@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Megaphone, Plus, X, Users, Mail, BarChart3, Search, CheckSquare, CalendarDays, AlignLeft } from 'lucide-react';
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
@@ -19,10 +19,10 @@ export default function CampaignsPage() {
 
   const fetchData = async () => {
     try {
-      const resCamp = await fetch('http://localhost:3001/campaigns');
+      const resCamp = await fetch(`${API_URL}/campaigns`);
       if (resCamp.ok) setCampaigns(await resCamp.json());
 
-      const resCont = await fetch('http://localhost:3001/contacts');
+      const resCont = await fetch(`${API_URL}/contacts`);
       if (resCont.ok) setContacts(await resCont.json());
     } catch (error) {
       console.error("Erreur de chargement", error);
@@ -64,7 +64,7 @@ export default function CampaignsPage() {
     setLoading(true);
     try {
       const payload = { ...formData, contactIds: selectedContacts, userId: currentUserId };
-      const res = await fetch('http://localhost:3001/campaigns', {
+      const res = await fetch(`${API_URL}/campaigns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
